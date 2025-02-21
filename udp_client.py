@@ -5,39 +5,35 @@ import sys
 from datetime import datetime
 
 def generate_payload(size_mb):
-    # Generate random payload of specified size
     size_bytes = size_mb * 1024 * 1024
     return b'X' * size_bytes
 
 def send_data(payload_size_mb):
-    # Create UDP socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = ('localhost', 12345)
     
     try:
-        # Generate payload
         payload = generate_payload(payload_size_mb)
-        chunk_size = 65507  # Max UDP packet size
+        chunk_size = 65507 #max packet size, adjust for reduce packet loss at higher sizes
         
         print(f"Client IP: {socket.gethostbyname(socket.gethostname())}")
-        print(f"Sending {payload_size_mb} MB of data to server")
+        print(f"Sending {payload_size_mb} MB of data")
         send_timestamp = datetime.now()
-        print(f"Started sending data at: {send_timestamp}")
+        print(f"Start Time: {send_timestamp}")
 
-        # Send data in chunks
+        # send data
         for i in range(0, len(payload), chunk_size):
             chunk = payload[i:i + chunk_size]
             client_socket.sendto(chunk, server_address)
-            # Add a small delay between packets to prevent overwhelming the receiver
-            time.sleep(0.1)
+            time.sleep(0.05) # delay between 0.1 to 0.01 to avoid rate limiting
         
-        # Send an explicit END_OF_DATA marker as a separate packet
+        
         client_socket.sendto(b"END_OF_DATA", server_address)
-        print("Sent END_OF_DATA marker")
+        # print("Sent END marker")
 
-        # Receive throughput from server
-        print("Waiting for server response...")
-        client_socket.settimeout(60)  # Set a timeout of 60 seconds for receiving response
+        # throughput
+        print("Waitin Server Response")
+        client_socket.settimeout(60)  # 60s timeout
         data, _ = client_socket.recvfrom(4096)
         response = json.loads(data.decode())
         

@@ -14,7 +14,7 @@ def start_server():
 
     while True:
         try:
-            print("\nWaiting to receive data...")
+            print("\nWaiting to Receive")
             total_bytes_received = 0
             received_data = b''
             start_time = None
