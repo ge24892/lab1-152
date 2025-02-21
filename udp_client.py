@@ -1,4 +1,3 @@
-# udp_client.py
 import socket
 import time
 import json
@@ -28,12 +27,17 @@ def send_data(payload_size_mb):
         # Send data in chunks
         for i in range(0, len(payload), chunk_size):
             chunk = payload[i:i + chunk_size]
-            if i + chunk_size >= len(payload):
-                # Add end marker to last chunk
-                chunk = chunk + b"END_OF_DATA"
             client_socket.sendto(chunk, server_address)
+            # Add a small delay between packets to prevent overwhelming the receiver
+            time.sleep(0.1)
+        
+        # Send an explicit END_OF_DATA marker as a separate packet
+        client_socket.sendto(b"END_OF_DATA", server_address)
+        print("Sent END_OF_DATA marker")
 
         # Receive throughput from server
+        print("Waiting for server response...")
+        client_socket.settimeout(60)  # Set a timeout of 60 seconds for receiving response
         data, _ = client_socket.recvfrom(4096)
         response = json.loads(data.decode())
         
@@ -44,6 +48,8 @@ def send_data(payload_size_mb):
         print(f"Bytes received: {response['bytes_received']}")
         print(f"Throughput: {response['throughput']:.2f} KB/s")
 
+    except socket.timeout:
+        print("Timeout waiting for server response. The server may not have received all the data.")
     except Exception as e:
         print(f"Error: {e}")
     finally:
